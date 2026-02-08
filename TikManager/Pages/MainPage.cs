@@ -21,11 +21,7 @@ internal class MainPage : Page
             Visible = false
         };
 
-        var versionObj = Assembly.GetExecutingAssembly().GetName().Version;
-        var version = versionObj != null ? $"{versionObj.Major}.{versionObj.Minor}.{versionObj.Build}" : "1.0.0";
-        var infoTextTemplate = ReadEmbeddedText("TikManager.Resources.InfoText.txt");
-
-        var infoText = string.Format(infoTextTemplate, version);
+        var infoText = ReadEmbeddedText("TikManager.Resources.InfoText.txt");
 
         var textView = new TextView()
         {
