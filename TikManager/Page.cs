@@ -6,5 +6,5 @@ internal abstract class Page
 
     public abstract void Init(FrameView content);
     public abstract void Activate();
-    public virtual void Deactivate() { }
+    public abstract void Deactivate() { }
 }

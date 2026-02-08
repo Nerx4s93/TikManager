@@ -15,4 +15,9 @@ internal class MainPage : Page
     {
 
     }
+
+    public override void Deactivate()
+    {
+
+    }
 }

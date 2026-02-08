@@ -15,4 +15,9 @@ internal class GamePage : Page
     {
 
     }
+
+    public override void Deactivate()
+    {
+
+    }
 }
