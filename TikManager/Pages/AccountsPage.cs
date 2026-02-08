@@ -56,7 +56,6 @@ internal sealed class AccountsPage : Page
     public override void Activate()
     {
         _root.Visible = true;
-        _list.SetFocus();
     }
 
     public override void Deactivate()
