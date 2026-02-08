@@ -7,7 +7,7 @@ internal sealed class PageManager
 {
     private readonly FrameView _content;
 
-    private readonly Dictionary<string, Page> _pages =new(StringComparer.OrdinalIgnoreCase);
+    private readonly Dictionary<string, Page> _pages = new(StringComparer.OrdinalIgnoreCase);
 
     private Page? _current;
 
@@ -32,6 +32,8 @@ internal sealed class PageManager
 
             _pages.Add(page.Title, page);
         }
+
+        Activate(Titles.ToList()[0]);
     }
 
     public void Activate(string title)
