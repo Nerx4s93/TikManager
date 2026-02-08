@@ -6,9 +6,10 @@ internal sealed class AccountsPage : Page
 {
     public override string Title => "Аккаунты";
 
+    private readonly SessionManager _sessionManager = new SessionManager();
+
     private View _root = null!;
     private ListView _list = null!;
-    private List<string> _sessions = [];
 
     public override void Init(FrameView content)
     {
@@ -21,7 +22,7 @@ internal sealed class AccountsPage : Page
             Visible = false
         };
 
-        _list = new ListView(_sessions)
+        _list = new ListView(_sessionManager.Sessions.ToList())
         {
             X = 0,
             Y = 0,
@@ -69,22 +70,26 @@ internal sealed class AccountsPage : Page
             Y = 1,
             Width = Dim.Fill() - 2
         };
-
         dialog.Add(input);
+
+        input.KeyPress += (e) =>
+        {
+            if (e.KeyEvent.Key == Key.Enter)
+            {
+                SubmitSession(input.Text.ToString());
+                e.Handled = true;
+                Application.RequestStop();
+            }
+        };
 
         var okButton = new Button("OK");
         okButton.Clicked += () =>
-            {
-                if (!string.IsNullOrWhiteSpace(input.Text.ToString()))
-                {
-                    _sessions.Add(input.Text.ToString()!);
-                    _list.SetSource(_sessions);
-                }
+        {
+            SubmitSession(input.Text.ToString());
+            Application.RequestStop();
+        };
 
-                Application.RequestStop();
-            };
-
-        var cancelButton = new Button("Cancel");
+        var cancelButton = new Button("Отмена");
         cancelButton.Clicked += () => Application.RequestStop();
 
         dialog.AddButton(okButton);
@@ -95,13 +100,33 @@ internal sealed class AccountsPage : Page
 
     private void RemoveSession()
     {
-        if (_sessions.Count == 0 || _list.SelectedItem < 0)
+        if (_sessionManager.Sessions.Count == 0 || _list.SelectedItem < 0)
         {
             return;
         }
 
-        var index = _list.SelectedItem;
-        _sessions.RemoveAt(index);
-        _list.SetSource(_sessions);
+        var session = _list.Source.ToList()[_list.SelectedItem]!.ToString();
+        if (session is null)
+        {
+            return;
+        }
+
+        _sessionManager.DeleteSession(session);
+        _sessionManager.Save();
+
+        _list.SetSource(_sessionManager.Sessions.ToList());
+    }
+
+    private void SubmitSession(string? session)
+    {
+        if (string.IsNullOrWhiteSpace(session))
+        {
+            return;
+        }
+
+        _sessionManager.AddSession(session);
+        _sessionManager.Save();
+
+        _list.SetSource(_sessionManager.Sessions.ToList());
     }
 }
