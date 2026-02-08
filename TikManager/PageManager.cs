@@ -11,7 +11,7 @@ internal sealed class PageManager
 
     private Page? _current;
 
-    public IReadOnlyCollection<string> Titles => _pages.Keys;
+    public IReadOnlyList<string> Titles => _pages.Values.OrderBy(p => p.Index).Select(p => p.Title).ToList();
 
     public PageManager(FrameView content)
     {

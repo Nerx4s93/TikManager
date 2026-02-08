@@ -5,6 +5,7 @@ namespace TikManager.Pages;
 
 internal sealed class AccountsPage : Page
 {
+    public override int Index => 1;
     public override string Title => "Аккаунты";
 
     private List<Session> _cachedSessions = new List<Session>();
