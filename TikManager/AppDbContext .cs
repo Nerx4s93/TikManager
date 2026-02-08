@@ -3,17 +3,18 @@ using TikManager.Models;
 
 namespace TikManager;
 
-public class SessionDbContext : DbContext
+public class AppDbContext  : DbContext
 {
     public DbSet<Session> Sessions { get; set; } = null!;
+    public DbSet<Proxy> Proxies { get; set; } = null!;
 
-    public SessionDbContext()
+    public AppDbContext ()
     {
         Database.EnsureCreated();
     }
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
-        optionsBuilder.UseSqlite("Filename=sessions.db");
+        optionsBuilder.UseSqlite("Filename=app.db");
     }
 }

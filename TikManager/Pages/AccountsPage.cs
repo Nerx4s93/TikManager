@@ -8,7 +8,7 @@ internal sealed class AccountsPage : Page
     public override int Index => 1;
     public override string Title => "Аккаунты";
 
-    private List<Session> _cachedSessions = new List<Session>();
+    private List<Session> _cachedSessions = [];
 
     private View _root = null!;
     private ListView _list = null!;
@@ -37,13 +37,13 @@ internal sealed class AccountsPage : Page
         var addButton = new Button("Добавить")
         {
             X = 0,
-            Y = Pos.Bottom(_list)
+            Y = Pos.Bottom(_list) + 1
         };
 
         var removeButton = new Button("Удалить")
         {
             X = Pos.Right(addButton) + 2,
-            Y = Pos.Bottom(_list)
+            Y = Pos.Bottom(_list) + 1
         };
 
         addButton.Clicked += AddSession;
@@ -65,7 +65,7 @@ internal sealed class AccountsPage : Page
 
     private void LoadSessions()
     {
-        using var db = new SessionDbContext();
+        using var db = new AppDbContext ();
         _cachedSessions = db.Sessions.ToList();
     }
 
@@ -108,14 +108,14 @@ internal sealed class AccountsPage : Page
 
     private void RemoveSession()
     {
-        if (!_cachedSessions.Any() || _list.SelectedItem < 0)
+        if (_cachedSessions.Count == 0 || _list.SelectedItem < 0)
         {
             return;
         }    
 
         var sessionToRemove = _cachedSessions[_list.SelectedItem];
 
-        using var context = new SessionDbContext();
+        using var context = new AppDbContext ();
         var session = context.Sessions.FirstOrDefault(s => s.Id == sessionToRemove.Id);
         if (session != null)
         {
@@ -136,7 +136,7 @@ internal sealed class AccountsPage : Page
 
         var session = new Session { SessionId = sessionId };
 
-        using var context = new SessionDbContext();
+        using var context = new AppDbContext ();
         context.Sessions.Add(session);
         context.SaveChanges();
 
