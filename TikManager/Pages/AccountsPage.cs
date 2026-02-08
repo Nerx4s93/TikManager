@@ -7,12 +7,14 @@ internal sealed class AccountsPage : Page
 {
     public override string Title => "Аккаунты";
 
+    private List<Session> _cachedSessions = new List<Session>();
+
     private View _root = null!;
     private ListView _list = null!;
 
     public override void Init(FrameView content)
     {
-        using var context = new SessionDbContext();
+        LoadSessions();
 
         _root = new View
         {
@@ -23,7 +25,7 @@ internal sealed class AccountsPage : Page
             Visible = false
         };
 
-        _list = new ListView(context.Sessions.Select(s => s.SessionId).ToList())
+        _list = new ListView(_cachedSessions.Select(s => s.SessionId).ToList())
         {
             X = 0,
             Y = 0,
@@ -61,6 +63,12 @@ internal sealed class AccountsPage : Page
         _root.Visible = false;
     }
 
+    private void LoadSessions()
+    {
+        using var db = new SessionDbContext();
+        _cachedSessions = db.Sessions.ToList();
+    }
+
     private void AddSession()
     {
         var dialog = new Dialog("Добавить sessionId", 50, 8);
@@ -71,8 +79,6 @@ internal sealed class AccountsPage : Page
             Y = 1,
             Width = Dim.Fill() - 2
         };
-        dialog.Add(input);
-
         input.KeyPress += (e) =>
         {
             if (e.KeyEvent.Key == Key.Enter)
@@ -93,6 +99,7 @@ internal sealed class AccountsPage : Page
         var cancelButton = new Button("Отмена");
         cancelButton.Clicked += () => Application.RequestStop();
 
+        dialog.Add(input);
         dialog.AddButton(okButton);
         dialog.AddButton(cancelButton);
 
@@ -101,24 +108,23 @@ internal sealed class AccountsPage : Page
 
     private void RemoveSession()
     {
-        using var context = new SessionDbContext();
-
-        if (!context.Sessions.Any() || _list.SelectedItem < 0)
+        if (!_cachedSessions.Any() || _list.SelectedItem < 0)
         {
             return;
-        }
+        }    
 
-        var sessionToRemove = _list.Source.ToList()[_list.SelectedItem]!.ToString();
-        if (sessionToRemove == null) return;
+        var sessionToRemove = _cachedSessions[_list.SelectedItem];
 
-        var session = context.Sessions.FirstOrDefault(s => s.SessionId == sessionToRemove);
+        using var context = new SessionDbContext();
+        var session = context.Sessions.FirstOrDefault(s => s.Id == sessionToRemove.Id);
         if (session != null)
         {
             context.Sessions.Remove(session);
             context.SaveChanges();
         }
 
-        _list.SetSource(context.Sessions.Select(s => s.SessionId).ToList());
+        _cachedSessions.Remove(sessionToRemove);
+        _list.SetSource(_cachedSessions.Select(s => s.SessionId).ToList());
     }
 
     private void SubmitSession(string? sessionId)
@@ -126,12 +132,15 @@ internal sealed class AccountsPage : Page
         if (string.IsNullOrWhiteSpace(sessionId))
         {
             return;
-        }    
+        }
+
+        var session = new Session { SessionId = sessionId };
 
         using var context = new SessionDbContext();
-        context.Sessions.Add(new Session { SessionId = sessionId });
+        context.Sessions.Add(session);
         context.SaveChanges();
 
-        _list.SetSource(context.Sessions.Select(s => s.SessionId).ToList());
+        _cachedSessions.Add(session);
+        _list.SetSource(_cachedSessions.Select(s => s.SessionId).ToList());
     }
 }
