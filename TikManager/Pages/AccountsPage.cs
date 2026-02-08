@@ -1,4 +1,5 @@
 ﻿using Terminal.Gui;
+using TikManager.Models;
 
 namespace TikManager.Pages;
 
@@ -6,13 +7,13 @@ internal sealed class AccountsPage : Page
 {
     public override string Title => "Аккаунты";
 
-    private readonly SessionManager _sessionManager = new SessionManager();
-
     private View _root = null!;
     private ListView _list = null!;
 
     public override void Init(FrameView content)
     {
+        using var context = new SessionDbContext();
+
         _root = new View
         {
             X = 0,
@@ -22,7 +23,7 @@ internal sealed class AccountsPage : Page
             Visible = false
         };
 
-        _list = new ListView(_sessionManager.Sessions.ToList())
+        _list = new ListView(context.Sessions.Select(s => s.SessionId).ToList())
         {
             X = 0,
             Y = 0,
@@ -100,33 +101,37 @@ internal sealed class AccountsPage : Page
 
     private void RemoveSession()
     {
-        if (_sessionManager.Sessions.Count == 0 || _list.SelectedItem < 0)
+        using var context = new SessionDbContext();
+
+        if (!context.Sessions.Any() || _list.SelectedItem < 0)
         {
             return;
         }
 
-        var session = _list.Source.ToList()[_list.SelectedItem]!.ToString();
-        if (session is null)
+        var sessionToRemove = _list.Source.ToList()[_list.SelectedItem]!.ToString();
+        if (sessionToRemove == null) return;
+
+        var session = context.Sessions.FirstOrDefault(s => s.SessionId == sessionToRemove);
+        if (session != null)
         {
-            return;
+            context.Sessions.Remove(session);
+            context.SaveChanges();
         }
 
-        _sessionManager.DeleteSession(session);
-        _sessionManager.Save();
-
-        _list.SetSource(_sessionManager.Sessions.ToList());
+        _list.SetSource(context.Sessions.Select(s => s.SessionId).ToList());
     }
 
-    private void SubmitSession(string? session)
+    private void SubmitSession(string? sessionId)
     {
-        if (string.IsNullOrWhiteSpace(session))
+        if (string.IsNullOrWhiteSpace(sessionId))
         {
             return;
-        }
+        }    
 
-        _sessionManager.AddSession(session);
-        _sessionManager.Save();
+        using var context = new SessionDbContext();
+        context.Sessions.Add(new Session { SessionId = sessionId });
+        context.SaveChanges();
 
-        _list.SetSource(_sessionManager.Sessions.ToList());
+        _list.SetSource(context.Sessions.Select(s => s.SessionId).ToList());
     }
 }
